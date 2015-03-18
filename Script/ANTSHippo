@@ -1,0 +1,21 @@
+i=$1
+path=`/shenlab/lab_stor5/hongkun/Infant/infantHAMMER`
+a=(2 4 5 7 9 10 11 13 15 16 18)
+cd $path
+cd /hippo
+cd ./hippoN${a[$i]}
+mkdir ./ANTsN${a[$i]}
+cd ./ANTsN${a[$i]}
+
+# Template
+cp $path/infantN${a[$i]}/xNORMAL0${a[$i]}_cbq-denoise-warped-flirt-h.hdr ./xNORMAL0${a[$i]}_tmplt_cbq.hdr
+cp ../hippoN${a[$i]}-6.hdr ./xNORMAL0${a[$i]}_tmplt_seg.hdr 
+cp $path/infantN${a[$i]}/xNORMAL0${a[$i]}_cbq-denoise-warped-flirt-h.img ./xNORMAL0${a[$i]}_tmplt_cbq.img
+cp ../hippoN${a[$i]}-6.img ./xNORMAL0${a[$i]}_tmplt_seg.img   
+# Subject
+cp $path/infantN${a[$i]}/xNORMAL0${a[$i+1]}_cbq-later-flirt-h.hdr ./xNORMAL0${a[$i+1]}_subj_cbq.hdr
+cp ../hippoN${a[$i+1]}-12.hdr ./xNORMAL0${a[$i+1]}_subj_seg.hdr
+cp $path/infantN${a[$i]}/xNORMAL0${a[$i+1]}_cbq-later-flirt-h.img ./xNORMAL0${a[$i+1]}_subj_cbq.img
+cp ../hippoN${a[$i+1]}-12.img ./xNORMAL0${a[$i+1]}_subj_seg.img
+
+perl /shenlab/lab_stor5/hongkun/Infant/infantHAMMER/ANTSCORE -T xNORMAL0${a[$i]}_tmplt -X xNORMAL0${a[$i+1]}_subj

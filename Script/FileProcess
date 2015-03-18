@@ -1,0 +1,11 @@
+## 
+for i in 1 2 3 4 6 7 8 10 12 13
+do 
+  cd /Users/hkge1991/Documents/MATLAB/Research_6/5-fold_experiment/Test/feature/
+  cd ./p$i
+  mkdir ./NoUse
+  mv mr* ./NoUse/
+  cd .. ##p1...p13
+  cp -i ../ElastixLinear/elastixLinear_p$i/output_p$i/mr_elastix_p$i* ./p$i/
+  cp -i ../store/ElastixLinear/elastixLinear_p$i/mr_pro_CS_p$i* ./p$i/
+  done

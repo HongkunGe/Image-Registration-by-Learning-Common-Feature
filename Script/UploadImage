@@ -1,0 +1,14 @@
+##TO upload file to the killdevil server
+a=(1 2 3 4 6 7 8 10 12 13)
+for i in {0..9}
+do 
+  echo "Process Subject $i"
+  cd /Users/hkge1991/Documents/MATLAB/Research_6/5-fold_experiment/Test/feature
+  cd ./p${a[$i]}
+  scp ct_CS_p${a[$i]}.hdr hongkun@killdevil.unc.edu:/nas02/home/h/o/hongkun/ElastixLinear/elastixLinear_p${a[$i]}
+  scp ct_CS_p${a[$i]}.img hongkun@killdevil.unc.edu:/nas02/home/h/o/hongkun/ElastixLinear/elastixLinear_p${a[$i]}
+  cd /Users/hkge1991/Documents/MATLAB/OriginalData/
+  cd ./p${a[$i]}
+  scp mr.mhd hongkun@killdevil.unc.edu:/nas02/home/h/o/hongkun/ElastixLinear/elastixLinear_p${a[$i]}
+  scp mr.raw hongkun@killdevil.unc.edu:/nas02/home/h/o/hongkun/ElastixLinear/elastixLinear_p${a[$i]}
+done

@@ -1,0 +1,16 @@
+i=$1
+echo $i
+cd /shenlab/lab_stor5/hongkun/Infant/infantHAMMER/
+a=(2 4 5 7 9 10 11 13 15 16 18)
+cd ./infantN${a[$i]}
+mkdir ./ANTsN${a[$i]}
+
+# Template
+cp ../xNORMAL0${a[$i]}_cbq-denoise-warped-flirt-h.* ./xNORMAL0${a[$i]}_tmplt_cbq.*
+cp ../xNORMAL0${a[$i]}-ls-corrected-later-flirt.* ./xNORMAL0${a[$i]}_tmplt_seg.*    
+# Subject
+cp ../xNORMAL0${a[$i+1]}_cbq-later-flirt-h.* ./xNORMAL0${a[$i+1]}_subj_cbq.*
+cp ../xNORMAL0${a[$i+1]}-ls-corrected-later-flirt.* ./xNORMAL0${a[$i+1]}_subj_seg.*
+
+/shenlab/lab_stor/mjkim/registration/LinuxRunANTSConvert2HAMMER.pl -T xNORMAL0${a[$i]}_tmplt -X xNORMAL0${a[$i+1]}_subj
+

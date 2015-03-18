@@ -1,0 +1,283 @@
+#!/usr/bin/perl
+
+use Getopt::Std;
+
+#get arguments list
+$argc=@ARGV;
+
+&showUsage if ( $argc < 0 );
+
+my $opt_string = 'M:N:X:T:';
+
+getopts( "$opt_string");
+
+
+########################################
+#       Reading input parameters       #
+########################################
+my $current_dir = `pwd`; chomp($current_dir); 
+$current_dir = $current_dir."\/";
+print "current dir: $current_dir\n";
+$binpathART = &my_get_string_with_default("-p", *ARGV, "/shenlab/lab_stor/mjkim/LearningBasedReg/ART/bin/");
+$binpathART = $binpathART."\/";
+$binpathANTS = &my_get_string_with_default("-p", *ARGV, "/shenlab/lab_stor/mjkim/LearningBasedReg/ANTs-1.9.x-Linux/bin/");
+$binpathANTS = $binpathANTS."\/";
+
+@default_dim       = (256,256,198); @dim = ();
+@dim = &my_get_string_list_with_default("-d", *ARGV, *default_dim);
+$Dim3D = "$dim[0],$dim[1],$dim[2]";
+
+@subs = (); $ind = 0;
+
+
+if ($opt_X){
+    $fileid = $opt_X;
+}   
+else
+{
+    &showUsage;
+    exit (0);
+}
+
+if ($opt_T){
+    $template = $opt_T;
+}   
+else
+{
+    &showUsage;
+    exit (0);
+}
+
+print "fileid: $fileid\n";
+print "template: $template\n\n";
+print "dim: $dim[0],$dim[1],$dim[2]";
+
+
+# template filenames
+
+$template_cbq_hdr = "${template}_cbq.hdr";
+$template_seg_hdr = "${template}_seg.hdr";
+$template_cbq_nii = "${template}_cbq.nii";
+$template_seg_nii = "${template}_seg.nii";
+
+printf("template_cbq_hdr: $template_cbq_hdr\n");
+printf("template_seg_hdr: $template_seg_hdr\n");
+printf("template_cbq_nii: $template_cbq_nii\n");
+printf("template_seg_nii: $template_seg_nii\n");
+
+#subject filenames
+
+$subj_cbq_hdr = "${fileid}_cbq.hdr";
+$subj_seg_hdr = "${fileid}_seg.hdr";
+$subj_cbq_nii = "${fileid}_cbq.nii";
+$subj_seg_nii = "${fileid}_seg.nii";
+$subj_cbq_img = "${fileid}_cbq.img";
+
+printf("subj_cbq_hdr: $subj_cbq_hdr\n");
+printf("subj_cbq_nii: $subj_cbq_nii\n");
+printf("subj_seg_hdr: $subj_seg_hdr\n");
+printf("subj_seg_nii: $subj_seg_nii\n");
+
+#result filenames
+$warp_subj_cbq_nii = "${fileid}_cbq.warp.nii";
+$warp_subj_cbq_hdr = "${fileid}_cbq.warp.hdr";
+$warp_subj_cbq_img = "${fileid}_cbq.warp.img";
+$warp_subj_cbq_byte_hdr = "${fileid}_cbq.warp.byte.hdr";
+
+$warp_subj_seg_nii = "${fileid}_seg.warp.nii";
+$warp_subj_seg_hdr = "${fileid}_seg.warp.hdr";
+$warp_subj_seg_img = "${fileid}_seg.warp.img";
+$warp_subj_seg_byte_hdr = "${fileid}_seg.warp.byte.hdr";
+
+printf("warp_subj_seg_nii: $warp_subj_seg_nii\n");
+printf("warp_subj_seg_hdr: $warp_subj_seg_hdr\n");
+printf("warp_subj_seg_img: $warp_subj_seg_img\n");
+
+printf("warp_subj_cbq_nii: $warp_subj_cbq_nii\n");
+printf("warp_subj_cbq_hdr: $warp_subj_cbq_hdr\n");
+printf("warp_subj_cbq_img: $warp_subj_cbq_img\n");
+
+#filenames for deformation field and transformation matrix 
+$aff_subj_mat = "${fileid}_cbq.warpAffine.txt";
+$df_subj_nii = "${fileid}_cbq.warpWarp.nii";
+$df_subj_raw = "${fileid}_cbq.deform.raw";
+$df_subj_mhd = "${fileid}_cbq.deform.mhd";
+$df_subj_img = "${fileid}_cbq.deform.img";
+
+printf ("df_subj_nii: $df_subj_nii\n");
+printf ("aff_subj_mat: $aff_subj_mat\n");
+
+# convert to nii: Template
+print ("${binpathART}analyze2nii -i $template_cbq_hdr  -O RAS\n");
+system ("${binpathART}analyze2nii -i $template_cbq_hdr  -O RAS");
+
+print ("${binpathART}analyze2nii -i $template_seg_hdr -O RAS\n");
+system ("${binpathART}analyze2nii -i $template_seg_hdr -O RAS");
+
+print ("${binpathART}analyze2nii -i $subj_cbq_hdr  -O RAS\n");
+system ("${binpathART}analyze2nii -i $subj_cbq_hdr  -O RAS");
+
+print ("${binpathART}analyze2nii -i $subj_seg_hdr -O RAS\n");
+system ("${binpathART}analyze2nii -i $subj_seg_hdr -O RAS");
+
+
+#Run ANTS 
+print("${binpathANTS}/ANTS 3 -m PR[$template_cbq_nii, $subj_cbq_nii, 1, 2] -o $warp_subj_cbq_nii -r Gauss[2,0] -t SyN[0.5] -i 30x99x11 --use-Histogram-Matching\n");
+system("${binpathANTS}/ANTS 3 -m PR[$template_cbq_nii, $subj_cbq_nii, 1, 2] -o $warp_subj_cbq_nii -r Gauss[2,0] -t SyN[0.5] -i 30x99x11 --use-Histogram-Matching");
+
+#Warp cbq images
+ print ("${binpathANTS}WarpImageMultiTransform 3 $subj_cbq_nii $warp_subj_cbq_nii  -R $template_cbq_nii $df_subj_nii $aff_subj_mat\n");
+ system ("${binpathANTS}WarpImageMultiTransform 3 $subj_cbq_nii $warp_subj_cbq_nii -R $template_cbq_nii $df_subj_nii $aff_subj_mat");
+
+#Warp seg images (nearest neighbor interpolation)
+ print ("${binpathANTS}WarpImageMultiTransform 3 $subj_seg_nii $warp_subj_seg_nii --use-NN  -R $template_seg_nii $df_subj_nii $aff_subj_mat\n");
+ system ("${binpathANTS}WarpImageMultiTransform 3 $subj_seg_nii $warp_subj_seg_nii --use-NN  -R $template_seg_nii $df_subj_nii $aff_subj_mat");
+
+#Convert the warped cbq image (NIFTI) to UChar format (Analyze)
+print ("splitfile $warp_subj_cbq_nii  header 352 $warp_subj_cbq_img\n");
+system ("splitfile $warp_subj_cbq_nii  header 352 $warp_subj_cbq_img");
+
+print ("makeAVWHeader $warp_subj_cbq_hdr -d $Dim3D -tFLOAT -r1,1,1\n");
+system ("makeAVWHeader $warp_subj_cbq_hdr -d $Dim3D -tFLOAT -r1,1,1");
+
+print ("/shenlab/scratch/mjkim/MS/src/Bin/rescaleimage_float2byte_no_intensitychange $warp_subj_cbq_hdr $warp_subj_cbq_byte_hdr\n");
+system ("/shenlab/scratch/mjkim/MS/src/Bin/rescaleimage_float2byte_no_intensitychange $warp_subj_cbq_hdr $warp_subj_cbq_byte_hdr");
+
+#Convert the warped seg image (NIFTI) to UChar format (Analyze)
+print ("splitfile $warp_subj_seg_nii  header 352 $warp_subj_seg_img\n");
+system ("splitfile $warp_subj_seg_nii  header 352 $warp_subj_seg_img");
+
+print ("makeAVWHeader $warp_subj_seg_hdr -d $Dim3D -tFLOAT -r1,1,1\n");
+system ("makeAVWHeader $warp_subj_seg_hdr -d $Dim3D -tFLOAT -r1,1,1");
+
+print ("/shenlab/scratch/mjkim/MS/src/Bin/rescaleimage_float2byte_no_intensitychange $warp_subj_seg_hdr $warp_subj_seg_byte_hdr\n");
+system ("/shenlab/scratch/mjkim/MS/src/Bin/rescaleimage_float2byte_no_intensitychange $warp_subj_seg_hdr $warp_subj_seg_byte_hdr");
+
+################################## Convert Deformation field in NIFTI to HAMMER format
+
+ print ("splitfile $df_subj_nii header 352 $df_subj_raw\n");
+ system("splitfile $df_subj_nii header 352 $df_subj_raw");
+
+#Create .mhd header with the following content:
+ $mhd_file = $df_subj_mhd;
+ printf ("mhd_file: $mhd_file\n");
+
+ open (INFO, ">$mhd_file")||die("could not write file $mhd_file\n");
+ print INFO "ObjectType = Image\n";
+ print INFO "NDims = 4\n";
+ print INFO "BinaryData = True\n";
+ print INFO "BinaryDataByteOrderMSB = False\n";
+ print INFO "CompressedData = False\n";
+ print INFO "Offset = 0 0 0 0\n";
+ print INFO "CenterOfRotation = 0 0 0 0\n";
+ print INFO "AnatomicalOrientation = RAI\n";
+ print INFO "ElementSpacing = 1 1 1 1\n";
+ print INFO "DimSize = $dim[0] $dim[1] $dim[2] 3\n";
+ print INFO "ElementType = MET_FLOAT\n";
+ print INFO "ElementDataFile = ${df_subj_raw}\n";
+ close (INFO);
+
+#Change the order of data in the file from scanner to voxel sequence
+  printf ("./Scanner2VoxelSequence $df_subj_mhd $df_subj_mhd\n");
+  system ("./Scanner2VoxelSequence $df_subj_mhd $df_subj_mhd");
+
+# convert to HAMMER format
+  printf ("/shenlab/scratch2/mjkim/Project/LearningBasedRegistration/bin/LinuxConvertDeformationFieldITK2Hammer $df_subj_raw $df_subj_img -d $dim[0],$dim[1],$dim[2]\n");
+  system ("/shenlab/scratch2/mjkim/Project/LearningBasedRegistration/bin/LinuxConvertDeformationFieldITK2Hammer $df_subj_raw $df_subj_img -d $dim[0],$dim[1],$dim[2]");
+
+# warp cbq img based on the deformation fields
+  printf ("/shenlab/scratch2/mjkim/Project/LearningBasedRegistration/bin/LinuxImageTransformation $subj_cbq_img $df_subj_img $warp_subj_cbq_img -d $dim[0],$dim[1],$dim[2] -S\n");
+  system ("/shenlab/scratch2/mjkim/Project/LearningBasedRegistration/bin/LinuxImageTransformation $subj_cbq_img $df_subj_img $warp_subj_cbq_img -d $dim[0],$dim[1],$dim[2] -S");
+
+
+# **********************************************************************************
+# call format: get_file_linenumber(file)
+# **********************************************************************************
+sub get_header_info
+ {
+    $file = $_[0];
+
+    open TMP, "$tempfile";
+    local($col_rec) = <TMP>;
+    close TMP;
+    @ttmp = split(' ', $col_rec);
+
+    return (@ttmp);
+}
+
+
+
+sub showUsage{
+    print "Example: LinuxRunANTSConvert2HAMMER.pl -T na01 -X na22 \n\n";
+    print "-T: template\n";
+    print "-X: subject\n";
+
+    print "You need na01_cbq.hdr, na01_seg.hdr as the template, na22_cbq.hdr, na22_seg.hdr as the subject in this example.\n";
+
+
+    exit(1);
+} 
+
+
+# ***************************************************************************
+# call format: my_get_string_with_default($option, *argument_list, $default)
+# ***************************************************************************
+sub my_get_string_with_default
+  {
+    $option = $_[0];
+    (*arg_list) = $_[1];
+    $default = $_[2];
+
+    local($count) = 0;
+    while ($count < ($#arg_list + 1))
+      {
+        if (index($arg_list[$count], $option) != -1)
+          {
+            return (substr($arg_list[$count], 2));
+          }
+        $count = $count + 1;
+      }
+    return $default;
+  }
+
+# **********************************************************************************
+# call format: my_get_string($option, *argument_list)
+# **********************************************************************************
+sub my_get_string
+{
+   $option = $_[0];
+   (*arg_list) = $_[1];
+
+   local($count) = 0;
+   while ($count < ($#arg_list + 1))
+   {
+      if (index($arg_list[$count], $option) != -1)
+      {
+         return (substr($arg_list[$count], 2));
+      }
+      $count = $count + 1;
+   }
+}
+
+# **********************************************************************************
+# call format: my_get_string_list_with_default($option, *argument_list, *default)
+# **********************************************************************************
+sub my_get_string_list_with_default
+  {
+   $option = $_[0];
+   (*arg_list) = $_[1];
+   (*default) = $_[2];
+
+   local($count) = 0;
+   while ($count < ($#arg_list + 1)) 
+     {
+       if (index($arg_list[$count], $option) != -1)
+	 {
+	   $tmp_str = substr($arg_list[$count], 2);
+	   @lst = split(/,/, substr($arg_list[$count], 2));
+	   return (@lst);
+	 }
+       $count = $count + 1;
+     }
+   return (@default);
+ }
