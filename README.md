@@ -5,6 +5,10 @@ This is part of the research project for medical image registration. The paper o
 
 Functions in the folder ./5-fold_experiment/utility/ written by Hongkun Ge and All the codes cited by other authors have been given clear indication for copyright.
 
+# Paper
+
+My paper based on the project got pushed! Check it [here](http://link.springer.com/chapter/10.1007/978-3-319-24888-2_25).
+
 ## ./
 - demo_1.m    Test the feature of CT and MR images.
 - demo_2.m    Overall training and testing process of CT and MR IMAGES in a 5-fold manner. 
