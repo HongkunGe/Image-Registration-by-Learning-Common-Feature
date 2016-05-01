@@ -1,13 +1,14 @@
 # Image Registration by Learning Common Feature
 This is part of the research project for medical image registration. The paper of this project is accepted by Machine Learning in Medical Image. 
 
+# Paper
+
+My paper based on the project got published! Check it [here](http://link.springer.com/chapter/10.1007/978-3-319-24888-2_25).
+
+
 # Structure of the project directory
 
 Functions in the folder ./5-fold_experiment/utility/ written by Hongkun Ge and All the codes cited by other authors have been given clear indication for copyright.
-
-# Paper
-
-My paper based on the project got pushed! Check it [here](http://link.springer.com/chapter/10.1007/978-3-319-24888-2_25).
 
 ## ./
 - demo_1.m    Test the feature of CT and MR images.
